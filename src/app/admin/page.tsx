@@ -80,8 +80,7 @@ export default function AdminControlCenter() {
   const [gradingScore, setGradingScore] = useState("Pending");
 
   // Clean Forms Initialization States
-  const [newCourse, setNewCourse] = useState({ title: "", mentor: "", modules: "" });
-
+  const [newCourse, setNewCourse] = useState({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
   // Lecture Form Hook State
   const [newLecture, setNewLecture] = useState({
     course_title: "",
@@ -197,23 +196,34 @@ export default function AdminControlCenter() {
     fetchAdminData();
   }, []);
 
-  const loadStudentSubmissions = async (student: Profile) => {
-    setSelectedAssignmentStudent(student);
-    try {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select(`id, video_id, submission_url, remarks, grade, videos(name)`)
-        .eq("student_id", student.id);
+const loadStudentSubmissions = async (student: Profile) => {
+  setSelectedAssignmentStudent(student);
+  try {
+    // .select<any>() lagane se TypeScript nested object (videos.name) par error nahi dega
+    const { data, error } = await supabase
+      .from("submissions")
+      .select<any>(`
+        id, 
+        video_id, 
+        submission_url, 
+        remarks, 
+        grade, 
+        videos ( name )
+      `)
+      .eq("student_id", student.id);
 
-      if (!error && data) {
-        setStudentSubmissions(data);
-      } else {
-        setStudentSubmissions([]);
-      }
-    } catch (err) {
-      console.error("Failed to load submissions:", err);
+    if (error) throw error;
+
+    if (data) {
+      setStudentSubmissions(data);
+    } else {
+      setStudentSubmissions([]);
     }
-  };
+  } catch (err: any) {
+    console.error("Failed to load submissions:", err.message || err);
+    setStudentSubmissions([]); // Error ki surat mein array ko khali rakhein taaki UI crash na ho
+  }
+};
 
   const handleUpdateGrade = async (submissionId: number) => {
     setActionLoading(true);
@@ -374,7 +384,8 @@ export default function AdminControlCenter() {
 
     if (!error) {
       alert("🎉 Naya Course portal par deploy ho gya!");
-      setNewCourse({ title: "", mentor: "", modules: "" });
+      // ✅ Fixed Line: Saari fields ko properly reset kar diya
+      setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
       fetchAdminData();
     } else {
       alert("Error creating course: " + error.message);
@@ -382,51 +393,61 @@ export default function AdminControlCenter() {
     setActionLoading(false);
   };
 
-  const handleAddLecture = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setActionLoading(true);
-    try {
-      const assignmentPayload = newLecture.assignment_url || null;
-      const notesPayload = newLecture.notes_url || null;
+const handleAddLecture = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setActionLoading(true);
+  try {
+    const assignmentPayload = newLecture.assignment_url || null;
+    const pdfPayload = newLecture.notes_url || null; // 👈 Frontend notes_url ko pdfPayload banaya
 
-      const { error } = await supabase
-        .from("videos")
-        .insert([
-          {
-            course_title: newLecture.course_title,
-            name: newLecture.name,
-            module_name: newLecture.module_name || "General",
-            duration: newLecture.duration ? parseInt(newLecture.duration) : null,
-            video_url: newLecture.video_url,
-            assignment_url: assignmentPayload,
-            notes_url: notesPayload,
-            description: newLecture.description || null
-          }
-        ]);
+    const { error } = await supabase
+      .from("videos")
+      .insert([
+        {
+          course_id: 1, // 👈 Schema mein course_id lazmi hai, abhi dummy 1 rakha hai, aap selected course ki id bhejein
+          course_title: newLecture.course_title || null,
+          name: newLecture.name,
+          
+          // ⚠️ FIX 1: Duration ko Integer nahi banana kyunki database mein "20:00" string save hai
+          duration: newLecture.duration || null, 
+          
+          video_url: newLecture.video_url,
+          assignment_url: assignmentPayload,
+          
+          // ⚠️ FIX 2: Database column ka naam 'pdf_url' hai, isliye yahan pdf_url likha hai
+          pdf_url: pdfPayload, 
+          
+          // Note: Agar module_name aur description par error aaye toh Supabase mein inke columns bana lena, 
+          // warna abhi ke liye agar database me nahi hain to inko insert se hata dena.
+          module_name: newLecture.module_name || "General",
+          description: newLecture.description || null
+        }
+      ]);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      setNewLecture({
-        course_title: "",
-        name: "",
-        module_name: "",
-        duration: "",
-        video_url: "",
-        assignment_url: "",
-        notes_url: "",
-        description: ""
-      });
+    // Reset Form fields properly
+    setNewLecture({
+      course_title: "",
+      name: "",
+      module_name: "",
+      duration: "",
+      video_url: "",
+      assignment_url: "",
+      notes_url: "",
+      description: ""
+    });
 
-      await fetchAdminData();
-      alert("🚀 Video published successfully with full data mapping!");
+    await fetchAdminData();
+    alert("🚀 Video published successfully with full data mapping!");
 
-    } catch (err: any) {
-      console.error("Upload error:", err.message);
-      alert("Error uploading video: " + err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  } catch (err: any) {
+    console.error("Upload error:", err.message);
+    alert("Error uploading video: " + err.message);
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   const moveLeadToBin = (id: string) => {
     setBinnedUserIds(prev => [...prev, id]);
@@ -551,7 +572,7 @@ export default function AdminControlCenter() {
             </h1>
             {/* <p style={{ margin: "4px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>High Rise Digital Automation System Workspace Control Panel.</p> */}
           </div>
-        
+
         </header>
 
         {/* ================= SECTION 1: HOME PAGE DASHBOARD CARDS ================= */}
@@ -671,7 +692,50 @@ export default function AdminControlCenter() {
             {/* 🆕 CREATE COURSE FORM */}
             <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
               <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", color: "#34d399" }}>Create New Course Track</h3>
-              <form onSubmit={handleAddCourse} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  // Fields validation check
+                  if (!newCourse.title || !newCourse.mentor || !newCourse.duration || !newCourse.lessons) {
+                    alert("Please fill all required fields!");
+                    return;
+                  }
+
+                  setActionLoading(true);
+                  try {
+                    // ✨ NOW VALUE IS DYNAMIC: Automatically maps form data to database columns
+                    const payload = {
+                      title: newCourse.title,
+                      mentor: newCourse.mentor,
+                      modules: newCourse.modules || "",
+                      duration: newCourse.duration,
+                      // ✅ Fixed: Agar lessons khali string ho toh default 0 jaye, warna number convert ho
+                      lessons: newCourse.lessons ? Number(newCourse.lessons) : 0
+                    };
+
+                    const { data, error } = await supabase
+                      .from("courses")
+                      .insert([payload]);
+
+                    if (error) throw error;
+
+                    alert("Course successfully deployed into system!");
+
+                    // Resetting form data fields
+                    setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
+
+                    // ✅ Agar aapke function ka naam fetchCourses hai:
+                    // if (typeof fetchCourses === "function") fetchCourses();
+                  } catch (err: any) {
+                    alert("Error creating course: " + err.message);
+                  } finally {
+                    setActionLoading(false);
+                  }
+                }}
+                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              >
+                {/* Course Title Input */}
                 <input
                   type="text"
                   required
@@ -680,6 +744,8 @@ export default function AdminControlCenter() {
                   onChange={e => setNewCourse({ ...newCourse, title: e.target.value })}
                   style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
                 />
+
+                {/* Mentor/Instructor Input */}
                 <input
                   type="text"
                   required
@@ -688,6 +754,29 @@ export default function AdminControlCenter() {
                   onChange={e => setNewCourse({ ...newCourse, mentor: e.target.value })}
                   style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
                 />
+
+                {/* 🆕 ADDED: Course Duration Field */}
+                <input
+                  type="text"
+                  required
+                  placeholder="Course Duration (e.g. 8 Weeks, 2 Months)"
+                  value={newCourse.duration || ""}
+                  onChange={e => setNewCourse({ ...newCourse, duration: e.target.value })}
+                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+                />
+
+                {/* 🆕 ADDED: Total Lessons Quantity Field */}
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  placeholder="Total Lessons Quantity (e.g. 24, 45)"
+                  value={newCourse.lessons || ""}
+                  onChange={e => setNewCourse({ ...newCourse, lessons: e.target.value })}
+                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+                />
+
+                {/* Course Modules Setup Textarea */}
                 <textarea
                   rows={4}
                   placeholder="Modules Setup (Enter dabayein har module ko nayi line me likhne ke liye...&#10;Module 1: Core JavaScript&#10;Module 2: Advanced React)"
@@ -695,6 +784,7 @@ export default function AdminControlCenter() {
                   onChange={e => setNewCourse({ ...newCourse, modules: e.target.value })}
                   style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px", resize: "vertical", fontFamily: "inherit" }}
                 />
+
                 <button type="submit" disabled={actionLoading} style={{ padding: "12px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
                   {actionLoading ? "Deploying..." : "Deploy Fresh Course Blueprint"}
                 </button>
@@ -732,12 +822,17 @@ export default function AdminControlCenter() {
                           </div>
                         )}
                       </div>
+
                       <button
                         type="button"
-                        onClick={() => handleDeleteCourse(c.id)}
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this course blueprint?")) {
+                            handleDeleteCourse(c.id);
+                          }
+                        }}
                         style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", borderRadius: "6px", padding: "8px", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "center" }}
                       >
-                        <Trash2 size={14} />
+                        Delete
                       </button>
                     </div>
                   ))
