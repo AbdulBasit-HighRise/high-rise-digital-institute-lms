@@ -613,7 +613,7 @@ export default function StudentDashboard() {
 
               {/* REALTIME CHAT SYSTEM */}
               <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
-                <h4 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "800", color: "#2563eb" }}>COMMUNITY BATCH DISCUSSIONS CORE</h4>
+                <h4 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "800", color: "#2563eb" }}>COMMUNITY BATCH DISCUSSIONS</h4>
                 <form onSubmit={handlePostQuestion} style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
                   <input type="text" required placeholder="Ask any problem or question related to this course..." value={questionText} onChange={e => setQuestionText(e.target.value)} style={{ flex: 1, padding: "12px 16px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px", fontSize: "13px", color: "#f8fafc" }} />
                   <button type="submit" style={{ padding: "0 20px", backgroundColor: "#2563eb", border: "none", borderRadius: "12px", color: "#ffffff", cursor: "pointer" }}><Send size={15} /></button>

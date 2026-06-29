@@ -479,7 +479,6 @@ export default function AdminControlCenter() {
             <GraduationCap className="text-emerald-400" size={22} />
             <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
           </div>
-          <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700" }}>Admin Desk Suite v5.0</span>
         </div>
 
         {/* Navigation Menus (Removed flex: 1 to stop push down) */}
@@ -550,11 +549,9 @@ export default function AdminControlCenter() {
             <h1 style={{ fontSize: "22px", fontWeight: "900", margin: 0, textTransform: "capitalize" }}>
               {activeSidebar === "leads" ? "Website Leads" : activeSidebar === "students" ? "Manage Students" : activeSidebar}
             </h1>
-            <p style={{ margin: "4px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>High Rise Digital Automation System Workspace Control Panel.</p>
+            {/* <p style={{ margin: "4px 0 0 0", color: "#94a3b8", fontSize: "13px" }}>High Rise Digital Automation System Workspace Control Panel.</p> */}
           </div>
-          <div style={{ display: "flex", gap: "10px", backgroundColor: "#111827", padding: "6px 12px", borderRadius: "8px" }}>
-            <span style={{ fontSize: "12px", color: "#34d399", fontWeight: "bold" }}>Live System Core Monitor</span>
-          </div>
+        
         </header>
 
         {/* ================= SECTION 1: HOME PAGE DASHBOARD CARDS ================= */}

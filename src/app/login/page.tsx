@@ -45,7 +45,6 @@ export default function LoginPage() {
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: 900, fontSize: "20px", color: "#2563eb", marginBottom: "10px", letterSpacing: "0.5px" }}>
             <Award size={26} style={{ filter: "drop-shadow(0 0 8px rgba(37,99,235,0.4))" }}/> HRD INSTITUTE
           </div>
-          <p style={{ color: "#71717a", fontSize: "13px", margin: 0, lineHeight: "18px" }}>Enter your credentials to sync secure container gateway.</p>
         </div>
 
         {/* Error Notification Alert */}
