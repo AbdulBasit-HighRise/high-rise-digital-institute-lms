@@ -41,11 +41,24 @@ export default function LoginPage() {
       <div style={{ maxWidth: "400px", width: "100%", backgroundColor: "#111827", padding: "36px 32px", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.7)" }}>
         
         {/* Header Section */}
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: 900, fontSize: "20px", color: "#2563eb", marginBottom: "10px", letterSpacing: "0.5px" }}>
-            <Award size={26} style={{ filter: "drop-shadow(0 0 8px rgba(37,99,235,0.4))" }}/> HRD INSTITUTE
-          </div>
-        </div>
+       <div style={{ textAlign: "center", marginBottom: "32px" }}>
+  <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontWeight: 900, fontSize: "20px", color: "#2563eb", marginBottom: "10px", letterSpacing: "0.5px" }}>
+    
+    {/* 🆕 LOGO IMAGE ADDED HERE */}
+    <img 
+      src="/HR.png" // 👈 Yahan apne logo ka sahi path/link dalein (e.g., public folder ka path ya URL)
+      alt="HRD "
+      style={{ 
+        height: "26px",     // 👈 Sahi balanced height (Aap isko 18px ya 20px bhi kar sakte hain)
+        width: "auto",      // Aspect ratio kharab nahi hoga
+        objectFit: "contain",
+        filter: "drop-shadow(0 0 8px rgba(37,99,235,0.4))" // Purana shadow effect barqarar hai
+      }} 
+    />
+    
+   
+  </div>
+</div>
 
         {/* Error Notification Alert */}
         {errorMsg && (
@@ -134,9 +147,9 @@ export default function LoginPage() {
         {/* --- PREMIUM COMPACT ADMIN ASSISTANCE NOTIFICATION --- */}
         <div style={{ marginTop: "28px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: "10px", backgroundColor: "rgba(255,255,255,0.01)", padding: "12px", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.03)" }}>
           <HelpCircle size={16} style={{ color: "#64748b", flexShrink: 0, marginTop: "1px" }} />
-          <p style={{ margin: 0, fontSize: "11px", color: "#64748b", lineHeight: "15px" }}>
-            <strong style={{ color: "#9ca3af", display: "block", marginBottom: "2px" }}>Forgot your password?</strong>
-            Please contact the HRD Institute administration desk or your instructor directly to request a manual secure credentials assignment.
+          <p style={{ margin: 0, fontSize: "11px", color: "#ffffff", lineHeight: "15px" }}>
+            <strong style={{ color: "#fcfdfd", display: "block", marginBottom: "2px" }}>Forgot your password?</strong>
+           Please contact the HRD administration or your instructor to get your username and password.
           </p>
         </div>
 

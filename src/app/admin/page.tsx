@@ -495,12 +495,23 @@ const handleAddLecture = async (e: React.FormEvent) => {
       <aside style={{ backgroundColor: "#111827", padding: "24px 16px", display: "flex", flexDirection: "column", gap: "20px", borderRight: "1px solid rgba(255,255,255,0.02)", minHeight: "100vh", width: "260px", boxSizing: "border-box" }}>
 
         {/* Logo Section */}
-        <div style={{ padding: "0 8px", marginBottom: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <GraduationCap className="text-emerald-400" size={22} />
-            <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
-          </div>
-        </div>
+     <div style={{ padding: "0 8px", marginBottom: "8px" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    
+    {/* 🆕 LOGO IMAGE ADDED HERE */}
+    <img 
+      src="/HR.png" // 👈 Agar logo public folder mein hai toh path sahi hai, warna apna URL lagayein
+      alt="HRD Logo"
+      style={{ 
+        height: "26px",     // 👈 Text ke size (18px) ke mutabiq perfect height
+        width: "auto",      // Logo stretch nahi hoga
+        objectFit: "contain"
+      }} 
+    />
+    
+    {/* <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2> */}
+  </div>
+</div>
 
         {/* Navigation Menus (Removed flex: 1 to stop push down) */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
