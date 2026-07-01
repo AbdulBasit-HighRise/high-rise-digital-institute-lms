@@ -36,8 +36,8 @@ interface Course {
   modules?: string | null;
   duration?: string;
   lessons?: number;
+  poster_url?: string | null; // 👈 Ye line add karein
 }
-
 interface VideoNode {
   id: number;
   name: string;
@@ -80,8 +80,14 @@ export default function AdminControlCenter() {
   const [gradingScore, setGradingScore] = useState("Pending");
 
   // Clean Forms Initialization States
-  const [newCourse, setNewCourse] = useState({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
-  // Lecture Form Hook State
+const [newCourse, setNewCourse] = useState({ 
+  title: "", 
+  mentor: "", 
+  modules: "", 
+  duration: "", 
+  lessons: "", 
+  poster_url: "" // 👈 Ise yahan add karein
+});  // Lecture Form Hook State
   const [newLecture, setNewLecture] = useState({
     course_title: "",
     name: "",
@@ -161,7 +167,8 @@ export default function AdminControlCenter() {
           mentor: c.mentor || c.instructor || "Unknown",
           modules: c.modules || null,
           duration: c.duration || c.course_duration || "",
-          lessons: c.lessons || c.total_lessons || 0
+          lessons: c.lessons || c.total_lessons || 0,
+          poster_url: c.poster_url || null
         }));
         setCourses(finalizedCourses as Course[]);
       } else {
@@ -385,7 +392,7 @@ const loadStudentSubmissions = async (student: Profile) => {
     if (!error) {
       alert("🎉 Naya Course portal par deploy ho gya!");
       // ✅ Fixed Line: Saari fields ko properly reset kar diya
-      setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
+setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "", poster_url: "" });
       fetchAdminData();
     } else {
       alert("Error creating course: " + error.message);
@@ -481,10 +488,56 @@ const handleAddLecture = async (e: React.FormEvent) => {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#1E2939", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", fontFamily: "system-ui, sans-serif" }}>
-        <Loader2 className="animate-spin text-emerald-400" size={40} />
-        <p style={{ marginTop: "16px", fontSize: "14px", color: "#94a3b8", fontWeight: "600" }}>Connecting live Supabase database nodes...</p>
-      </div>
+     <div style={{ 
+  minHeight: "100vh", 
+  backgroundColor: "#0f172a", 
+  display: "flex", 
+  flexDirection: "column", 
+  alignItems: "center", 
+  justifyContent: "center", 
+  gap: "24px" 
+}}>
+  {/* Core Branding Container */}
+  <div style={{ 
+    display: "flex", 
+    flexDirection: "column",
+    alignItems: "center", 
+    justifyContent: "center",
+    gap: "16px"
+  }}>
+    {/* Stable Logo Node (No spinning on logo) */}
+    <img 
+      src="/HR.png" 
+      alt="HRD Logo"
+      style={{ 
+        height: "42px",     
+        width: "auto",      
+        objectFit: "contain",
+        filter: "drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2))"
+      }} 
+    />
+    
+    {/* Modern Micro Tech Spinner Below Logo */}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Loader2 
+        className="animate-spin text-blue-500" 
+        size={20} 
+        style={{ opacity: 0.8 }} 
+      />
+    </div>
+  </div>
+
+  {/* Clean Minimal Text */}
+  <span style={{ 
+    fontSize: "12px", 
+    color: "#64748b", 
+    fontWeight: "600",
+    letterSpacing: "1px",
+    textTransform: "uppercase"
+  }}>
+    Loading Workspace Data...
+  </span>
+</div>
     );
   }
 
@@ -697,164 +750,186 @@ const handleAddLecture = async (e: React.FormEvent) => {
         )}
 
         {/* ================= SECTION 3: LIVE COURSE BUILDER ================= */}
-        {activeSidebar === "courses" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+      {activeSidebar === "courses" && (
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
 
-            {/* 🆕 CREATE COURSE FORM */}
-            <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", color: "#34d399" }}>Create New Course Track</h3>
+    {/* 🆕 CREATE COURSE FORM WITH POSTER IMAGES LOGIC */}
+    <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
+      <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", color: "#34d399" }}>Create New Course Track</h3>
 
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  // Fields validation check
-                  if (!newCourse.title || !newCourse.mentor || !newCourse.duration || !newCourse.lessons) {
-                    alert("Please fill all required fields!");
-                    return;
-                  }
+    <form
+  onSubmit={async (e) => {
+    e.preventDefault();
+    // Fields validation check
+    if (!newCourse.title || !newCourse.mentor || !newCourse.duration || !newCourse.lessons) {
+      alert("Please fill all required fields!");
+      return;
+    }
 
-                  setActionLoading(true);
-                  try {
-                    // ✨ NOW VALUE IS DYNAMIC: Automatically maps form data to database columns
-                    const payload = {
-                      title: newCourse.title,
-                      mentor: newCourse.mentor,
-                      modules: newCourse.modules || "",
-                      duration: newCourse.duration,
-                      // ✅ Fixed: Agar lessons khali string ho toh default 0 jaye, warna number convert ho
-                      lessons: newCourse.lessons ? Number(newCourse.lessons) : 0
-                    };
+    setActionLoading(true);
+    try {
+      // Automatically maps form data to database columns including poster_url
+      const payload = {
+        title: newCourse.title,
+        mentor: newCourse.mentor,
+        modules: newCourse.modules || "",
+        duration: newCourse.duration,
+        lessons: newCourse.lessons ? Number(newCourse.lessons) : 0,
+        poster_url: newCourse.poster_url || null 
+      };
 
-                    const { data, error } = await supabase
-                      .from("courses")
-                      .insert([payload]);
+      const { data, error } = await supabase
+        .from("courses")
+        .insert([payload]);
 
-                    if (error) throw error;
+      if (error) throw error;
 
-                    alert("Course successfully deployed into system!");
+      alert("Course successfully deployed into system!");
 
-                    // Resetting form data fields
-                    setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "" });
+      // Resetting form data fields completely including poster state string reset
+      setNewCourse({ title: "", mentor: "", modules: "", duration: "", lessons: "", poster_url: "" });
 
-                    // ✅ Agar aapke function ka naam fetchCourses hai:
-                    // if (typeof fetchCourses === "function") fetchCourses();
-                  } catch (err: any) {
-                    alert("Error creating course: " + err.message);
-                  } finally {
-                    setActionLoading(false);
-                  }
-                }}
-                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-              >
-                {/* Course Title Input */}
-                <input
-                  type="text"
-                  required
-                  placeholder="Course Name (e.g. Next.js Masterclass)"
-                  value={newCourse.title}
-                  onChange={e => setNewCourse({ ...newCourse, title: e.target.value })}
-                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+      // Sync update triggered directly using valid live function node
+      fetchAdminData();
+
+    } catch (err: any) {
+      console.error("Course insertion failed:", err.message || err);
+      alert("Error creating course: " + (err.message || err));
+    } finally {
+      setActionLoading(false);
+    }
+  }}
+  style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+>
+  {/* Course Title Input */}
+  <input
+    type="text"
+    required
+    placeholder="Course Name (e.g. Next.js Masterclass)"
+    value={newCourse.title}
+    onChange={e => setNewCourse({ ...newCourse, title: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+  />
+
+  {/* Mentor/Instructor Input */}
+  <input
+    type="text"
+    required
+    placeholder="Lead Instructor / Teacher Name"
+    value={newCourse.mentor}
+    onChange={e => setNewCourse({ ...newCourse, mentor: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+  />
+
+  {/* Course Duration Field */}
+  <input
+    type="text"
+    required
+    placeholder="Course Duration (e.g. 8 Weeks, 2 Months)"
+    value={newCourse.duration || ""}
+    onChange={e => setNewCourse({ ...newCourse, duration: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+  />
+
+  {/* Total Lessons Quantity Field */}
+  <input
+    type="number"
+    required
+    min={1}
+    placeholder="Total Lessons Quantity (e.g. 24, 45)"
+    value={newCourse.lessons || ""}
+    onChange={e => setNewCourse({ ...newCourse, lessons: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+  />
+
+  {/* Course Cover Poster Image URL Field */}
+  <input
+    type="url"
+    placeholder="Course Poster Image URL (e.g. https://domain.com/cover.jpg)"
+    value={newCourse.poster_url || ""}
+    onChange={e => setNewCourse({ ...newCourse, poster_url: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
+  />
+
+  {/* Course Modules Setup Textarea */}
+  <textarea
+    rows={4}
+    placeholder="Modules Setup (Enter dabayein har module ko nayi line me likhne ke liye...&#10;Module 1: Core JavaScript&#10;Module 2: Advanced React)"
+    value={newCourse.modules}
+    onChange={e => setNewCourse({ ...newCourse, modules: e.target.value })}
+    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px", resize: "vertical", fontFamily: "inherit" }}
+  />
+
+  <button type="submit" disabled={actionLoading} style={{ padding: "12px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
+    {actionLoading ? "Deploying..." : "Deploy Fresh Course Blueprint"}
+  </button>
+</form>
+    </div>
+
+    {/* 📊 ACTIVE COURSES LIST WITH IMAGE PREVIEW */}
+    <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
+      <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#94a3b8" }}>Active Database Courses ({(courses || []).length})</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "450px", overflowY: "auto" }}>
+        {courses && courses.length > 0 ? (
+          courses.map(c => (
+            <div key={String(c.id)} style={{ backgroundColor: "#1E2939", padding: "14px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+              
+              {/* 🆕 POSTER IMAGE LIVE THUMBNAIL CONTAINER OVERVIEW */}
+              {c.poster_url && (
+                <img 
+                  src={c.poster_url} 
+                  alt="Course Poster" 
+                  style={{ width: "65px", height: "65px", borderRadius: "6px", objectFit: "cover", backgroundColor: "#111827", border: "1px solid rgba(255,255,255,0.05)" }} 
+                  onError={(e) => { e.currentTarget.style.display = "none"; }} // Handles broken URLs safely without crashing client DOM UI tree
                 />
+              )}
 
-                {/* Mentor/Instructor Input */}
-                <input
-                  type="text"
-                  required
-                  placeholder="Lead Instructor / Teacher Name"
-                  value={newCourse.mentor}
-                  onChange={e => setNewCourse({ ...newCourse, mentor: e.target.value })}
-                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
-                />
-
-                {/* 🆕 ADDED: Course Duration Field */}
-                <input
-                  type="text"
-                  required
-                  placeholder="Course Duration (e.g. 8 Weeks, 2 Months)"
-                  value={newCourse.duration || ""}
-                  onChange={e => setNewCourse({ ...newCourse, duration: e.target.value })}
-                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
-                />
-
-                {/* 🆕 ADDED: Total Lessons Quantity Field */}
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  placeholder="Total Lessons Quantity (e.g. 24, 45)"
-                  value={newCourse.lessons || ""}
-                  onChange={e => setNewCourse({ ...newCourse, lessons: e.target.value })}
-                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }}
-                />
-
-                {/* Course Modules Setup Textarea */}
-                <textarea
-                  rows={4}
-                  placeholder="Modules Setup (Enter dabayein har module ko nayi line me likhne ke liye...&#10;Module 1: Core JavaScript&#10;Module 2: Advanced React)"
-                  value={newCourse.modules}
-                  onChange={e => setNewCourse({ ...newCourse, modules: e.target.value })}
-                  style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px", resize: "vertical", fontFamily: "inherit" }}
-                />
-
-                <button type="submit" disabled={actionLoading} style={{ padding: "12px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
-                  {actionLoading ? "Deploying..." : "Deploy Fresh Course Blueprint"}
-                </button>
-              </form>
-            </div>
-
-            {/* 📊 ACTIVE COURSES LIST */}
-            <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#94a3b8" }}>Active Database Courses ({(courses || []).length})</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "450px", overflowY: "auto" }}>
-                {courses && courses.length > 0 ? (
-                  courses.map(c => (
-                    <div key={String(c.id)} style={{ backgroundColor: "#1E2939", padding: "14px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: 0, fontSize: "14px", color: "white", fontWeight: "700" }}>{c.title || "Untitled Course"}</h4>
-                        <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px", alignItems: "center" }}>
-                          <span>Instructor: <strong style={{ color: "#f8fafc" }}>{c.mentor || "Unknown"}</strong></span>
-                          {c.duration && (
-                            <>
-                              <span style={{ color: "rgba(255,255,255,0.15)" }}>•</span>
-                              <span style={{ color: "#38bdf8", backgroundColor: "rgba(56,189,248,0.06)", padding: "2px 6px", borderRadius: "4px" }}>{c.duration}</span>
-                            </>
-                          )}
-                          {c.lessons && (
-                            <>
-                              <span style={{ color: "rgba(255,255,255,0.15)" }}>•</span>
-                              <span style={{ color: "#a78bfa", backgroundColor: "rgba(167,139,250,0.06)", padding: "2px 6px", borderRadius: "4px" }}>{c.lessons} Lessons</span>
-                            </>
-                          )}
-                        </div>
-                        {c.modules && (
-                          <div style={{ margin: "10px 0 0 0", fontSize: "11px", color: "#34d399", whiteSpace: "pre-line", lineHeight: "1.4", backgroundColor: "rgba(16,185,129,0.02)", padding: "8px", borderRadius: "6px", border: "1px solid rgba(16,185,129,0.05)" }}>
-                            <strong style={{ color: "#10b981", display: "block", marginBottom: "2px" }}>Structure Blueprint:</strong>
-                            {c.modules}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this course blueprint?")) {
-                            handleDeleteCourse(c.id);
-                          }
-                        }}
-                        style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", borderRadius: "6px", padding: "8px", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "center" }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <span style={{ fontSize: "12px", color: "#64748b", textAlign: "center", display: "block", padding: "20px" }}>Database mein koi course nahi mila. Naya course add karein!</span>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ margin: 0, fontSize: "14px", color: "white", fontWeight: "700" }}>{c.title || "Untitled Course"}</h4>
+                <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px", alignItems: "center" }}>
+                  <span>Instructor: <strong style={{ color: "#f8fafc" }}>{c.mentor || "Unknown"}</strong></span>
+                  {c.duration && (
+                    <>
+                      <span style={{ color: "rgba(255,255,255,0.15)" }}>•</span>
+                      <span style={{ color: "#38bdf8", backgroundColor: "rgba(56,189,248,0.06)", padding: "2px 6px", borderRadius: "4px" }}>{c.duration}</span>
+                    </>
+                  )}
+                  {c.lessons && (
+                    <>
+                      <span style={{ color: "rgba(255,255,255,0.15)" }}>•</span>
+                      <span style={{ color: "#a78bfa", backgroundColor: "rgba(167,139,250,0.06)", padding: "2px 6px", borderRadius: "4px" }}>{c.lessons} Lessons</span>
+                    </>
+                  )}
+                </div>
+                {c.modules && (
+                  <div style={{ margin: "10px 0 0 0", fontSize: "11px", color: "#34d399", whiteSpace: "pre-line", lineHeight: "1.4", backgroundColor: "rgba(16,185,129,0.02)", padding: "8px", borderRadius: "6px", border: "1px solid rgba(16,185,129,0.05)" }}>
+                    <strong style={{ color: "#10b981", display: "block", marginBottom: "2px" }}>Structure Blueprint:</strong>
+                    {c.modules}
+                  </div>
                 )}
               </div>
-            </div>
 
-          </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete this course blueprint?")) {
+                    handleDeleteCourse(c.id);
+                  }
+                }}
+                style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", borderRadius: "6px", padding: "8px", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "center" }}
+              >
+                Delete
+              </button>
+            </div>
+          ))
+        ) : (
+          <span style={{ fontSize: "12px", color: "#64748b", textAlign: "center", display: "block", padding: "20px" }}>Database mein koi course nahi mila. Naya course add karein!</span>
         )}
+      </div>
+    </div>
+
+  </div>
+)}
 
         <>
           {/* ================= SECTION 4: VIDEO SCHEDULER ENGINE (WITH DESCRIPTION) ================= */}

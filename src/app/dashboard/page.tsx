@@ -8,8 +8,7 @@ import {
   Lock, Send, Video, MessageSquare, Download, Wrench,
   FileText, ExternalLink, RefreshCw, Layers, User, Play, UploadCloud, ChevronDown, ClipboardList, History
 } from "lucide-react";
-// 🆕 Add this line at the top of your file with other states
-// const [viewMode, setViewMode] = useState<"syllabus" | "player">("syllabus");
+
 interface EnrolledCourse {
   course_id: number;
   progress: number;
@@ -19,6 +18,7 @@ interface EnrolledCourse {
     mentor: string;
     duration: string;
     lessons: number;
+    poster_url?: string | null; // 🆕 Added to support dynamic posters
   } | null;
 }
 
@@ -55,7 +55,7 @@ interface LectureVideo {
   video_url: string | null;
   course_id?: number;
   completed?: boolean;
-  description?: string | null; // 🛠️ Step 1 Fixed: Added Description inside Interface Node
+  description?: string | null;
 }
 
 export default function StudentDashboard() {
@@ -63,11 +63,10 @@ export default function StudentDashboard() {
 
   // 🧭 Navigation Tabs Manager
   const [activeTab, setActiveTab] = useState<"dashboard" | "classroom" | "tools" | "complain" | "account">("dashboard");
-// const [activeTab, setActiveTab] = useState("dashboard");
-  // const [selectedCourse, setSelectedCourse] = useState(null);
   
-  // 🆕 Nayi line ko yahan baqi states ke sath andar chipka dein:
+  // 🆕 View Mode State inside Component Body
   const [viewMode, setViewMode] = useState<"syllabus" | "player">("syllabus");
+
   // ⚡ Core Operation Control Engine States
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -200,9 +199,10 @@ export default function StudentDashboard() {
       if (enrollData && enrollData.length > 0) {
         const mappedEnrollments = await Promise.all(
           enrollData.map(async (item) => {
+            // 🛠️ FIX: Select query mein poster_url ko bhi fetch kar rahe hain ab
             const { data: courseData } = await supabase
               .from("courses")
-              .select("id, title, mentor, duration, lessons")
+              .select("id, title, mentor, duration, lessons, poster_url")
               .eq("id", item.course_id)
               .maybeSingle();
 
@@ -214,7 +214,8 @@ export default function StudentDashboard() {
                 title: "SEO + WordPress Premium Masterclass",
                 mentor: "Sir Zain",
                 duration: "8 Weeks",
-                lessons: 24
+                lessons: 24,
+                poster_url: null
               }
             };
           })
@@ -225,7 +226,6 @@ export default function StudentDashboard() {
         if (!selectedCourse) setSelectedCourse(activeTarget);
 
         if (activeTarget) {
-          // 🛠️ Step 2 Fixed: Added "description" into the Supabase select query string
           const { data: videoData, error: videoError } = await supabase
             .from("videos")
             .select("id, name, duration, video_url, course_id, description")
@@ -394,10 +394,56 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#0f172a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px" }}>
-        <Loader2 className="animate-spin text-blue-500" size={40} />
-        <span style={{ fontSize: "14px", color: "#94a3b8", fontWeight: "500" }}>Syncing Workspace Core Environment...</span>
-      </div>
+   <div style={{ 
+  minHeight: "100vh", 
+  backgroundColor: "#0f172a", 
+  display: "flex", 
+  flexDirection: "column", 
+  alignItems: "center", 
+  justifyContent: "center", 
+  gap: "24px" 
+}}>
+  {/* Core Branding Container */}
+  <div style={{ 
+    display: "flex", 
+    flexDirection: "column",
+    alignItems: "center", 
+    justifyContent: "center",
+    gap: "16px"
+  }}>
+    {/* Stable Logo Node (No spinning on logo) */}
+    <img 
+      src="/HR.png" 
+      alt="HRD Logo"
+      style={{ 
+        height: "42px",     
+        width: "auto",      
+        objectFit: "contain",
+        filter: "drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2))"
+      }} 
+    />
+    
+    {/* Modern Micro Tech Spinner Below Logo */}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Loader2 
+        className="animate-spin text-blue-500" 
+        size={20} 
+        style={{ opacity: 0.8 }} 
+      />
+    </div>
+  </div>
+
+  {/* Clean Minimal Text */}
+  <span style={{ 
+    fontSize: "12px", 
+    color: "#64748b", 
+    fontWeight: "600",
+    letterSpacing: "1px",
+    textTransform: "uppercase"
+  }}>
+    Loading Workspace Data...
+  </span>
+</div>
     );
   }
 
@@ -411,33 +457,31 @@ export default function StudentDashboard() {
 
       {/* HEADER NAVBAR */}
       <header style={{ maxWidth: "1400px", margin: "0 auto 32px auto", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#111827", padding: "16px 32px", borderRadius: "20px", border: "1px solid #334155" }}>
-     <div style={{ display: "flex", alignItems: "center", gap: "12px", fontWeight: "800", fontSize: "18px", color: "#ffffff" }}>
-  
-  {/* 🆕 LOGO IMAGE ADDED (Clean & Unboxed) */}
-  <img 
-    src="/HR.png" // 👈 Aapka logo path
-    alt="HRD Logo"
-    style={{ 
-      height: "26px",     // 👈 Text size ke mutabiq perfect balanced height
-      width: "auto",      // Aspect ratio kharab nahi hoga
-      objectFit: "contain"
-    }} 
-  />
-  
- 
-</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", fontWeight: "800", fontSize: "18px", color: "#ffffff" }}>
+          <img 
+            src="/HR.png" 
+            alt="HRD Logo"
+            style={{ 
+              height: "26px",     
+              width: "auto",      
+              objectFit: "contain"
+            }} 
+          />
+        </div>
 
         <nav style={{ display: "flex", gap: "6px", backgroundColor: "#111827", padding: "4px", borderRadius: "12px", border: "1px solid #334155" }}>
           {[
             { id: "dashboard", label: "Dashboard", icon: <Layers size={14} /> },
-            { id: "classroom", label: "Classroom Studio", icon: <Video size={14} /> },
             { id: "tools", label: "Tools", icon: <Wrench size={14} /> },
             { id: "complain", label: "Complain Desk", icon: <MessageSquare size={14} /> },
             { id: "account", label: "My Profile", icon: <User size={14} /> }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (tab.id === "classroom") setViewMode("syllabus");
+              }}
               style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: "600", backgroundColor: activeTab === tab.id ? "#2563eb" : "transparent", color: activeTab === tab.id ? "#ffffff" : "#94a3b8" }}
             >
               {tab.icon} {tab.label}
@@ -462,8 +506,7 @@ export default function StudentDashboard() {
           <div>
             <div style={{ background: "#111827", borderRadius: "24px", padding: "32px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "#ffffff" }}>Welcome , {student.name}!</h2>
-                {/* <p style={{ margin: "6px 0 0 0", color: "#94a3b8", fontSize: "14px" }}>Click Launch Classroom below to watch video lectures or submit your tasks sheets.</p> */}
+                <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "#ffffff" }}>Welcome, {student.name}!</h2>
               </div>
             </div>
 
@@ -472,33 +515,53 @@ export default function StudentDashboard() {
             {enrollments.length > 0 ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "24px" }}>
                 {enrollments.map((item, index) => (
-                  <div key={index} style={{ backgroundColor: "#111827", borderRadius: "20px", border: "1px solid #334155", overflow: "hidden" }}>
-                    <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%)", padding: "24px", borderBottom: "1px solid #334155" }}>
-                      <span style={{ fontSize: "10px", backgroundColor: "#312e81", color: "#6366f1", padding: "4px 8px", borderRadius: "6px", fontWeight: "800" }}>PREMIUM TRACK</span>
-                      <h4 style={{ margin: "10px 0 0 0", color: "#ffffff", fontSize: "18px", fontWeight: "800" }}>{item.courses?.title}</h4>
+                  <div key={index} style={{ backgroundColor: "#111827", borderRadius: "20px", border: "1px solid #334155", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    
+                    {/* 🆕 FIX: Dynamic Course Poster Render Box */}
+                    <div style={{ width: "100%", height: "200px", backgroundColor: "#1e1b4b", position: "relative", overflow: "hidden" }}>
+                      {item.courses?.poster_url ? (
+                        <img 
+                          src={item.courses.poster_url} 
+                          alt={item.courses.title} 
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                        />
+                      ) : (
+                        // Fallback background if admin hasn't sent any poster URL
+                        <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%)", display: "flex", alignItems: "center", padding: "24px", boxSizing: "border-box" }}>
+                          <span style={{ fontSize: "10px", position: "absolute", top: "16px", left: "16px", backgroundColor: "#312e81", color: "#6366f1", padding: "4px 8px", borderRadius: "6px", fontWeight: "800" }}>PREMIUM TRACK</span>
+                        </div>
+                      )}
                     </div>
 
-                    <div style={{ padding: "24px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#e9edf3", marginBottom: "20px" }}>
-                        <span>Mentor: <b style={{ color: "#f8fafc" }}>{item.courses?.mentor}</b></span>
-                        <span>Duration: {item.courses?.duration}</span>
-                      </div>
-
-                      <div style={{ margin: "0 0 24px 0" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", marginBottom: "6px", color: "#94a3b8" }}>
-                          <span>COURSE PROGRESS</span>
-                          <span style={{ color: "#eff4f7" }}>{item.progress}% Completed</span>
+                    <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <div>
+                        <h4 style={{ margin: "0 0 12px 0", color: "#ffffff", fontSize: "18px", fontWeight: "800" }}>{item.courses?.title}</h4>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#e9edf3", marginBottom: "20px" }}>
+                          <span>Mentor: <b style={{ color: "#f8fafc" }}>{item.courses?.mentor}</b></span>
+                          <span>Duration: {item.courses?.duration}</span>
                         </div>
-                        <div style={{ height: "6px", backgroundColor: "#0f172a", borderRadius: "6px", overflow: "hidden" }}>
-                          <div style={{ width: `${item.progress}%`, height: "100%", backgroundColor: "#2563eb" }}></div>
+
+                        <div style={{ margin: "0 0 24px 0" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", marginBottom: "6px", color: "#94a3b8" }}>
+                            <span>COURSE PROGRESS</span>
+                            <span style={{ color: "#eff4f7" }}>{item.progress}% Completed</span>
+                          </div>
+                          <div style={{ height: "6px", backgroundColor: "#0f172a", borderRadius: "6px", overflow: "hidden" }}>
+                            <div style={{ width: `${item.progress}%`, height: "100%", backgroundColor: "#2563eb" }}></div>
+                          </div>
                         </div>
                       </div>
 
                       <button
-                        onClick={() => { setSelectedCourse(item); setActiveTab("classroom"); }}
+                        onClick={() => { 
+                          setSelectedCourse(item); 
+                          setActiveTab("classroom"); 
+                          setViewMode("syllabus");
+                        }}
                         style={{ width: "100%", padding: "12px", backgroundColor: "#2563eb", color: "#ffffff", border: "none", borderRadius: "12px", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "14px" }}
                       >
-                        Watch Now <ArrowRight size={16} />
+                        Start Now <ArrowRight size={16} />
                       </button>
                     </div>
                   </div>
@@ -513,263 +576,258 @@ export default function StudentDashboard() {
           </div>
         )}
 
-       {/* ================= TAB 2: CLASSROOM CORE STUDIO ================= */}
-{activeTab === "classroom" && selectedCourse && (
-  <div>
-    {/* 📋 UPPER HEADER: COURSE OVERVIEW STATUS BAR */}
-    <div style={{ backgroundColor: "#0a1425", padding: "20px 24px", borderRadius: "16px", border: "1px solid #334155", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-      <div>
-        <span style={{ fontSize: "11px", color: "#a855f7", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>Enrolled Program</span>
-        <h2 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", color: "#ffffff" }}>{selectedCourse.title}</h2>
-        <span style={{ fontSize: "12px", color: "#94a3b8" }}>Lead Mentor: <strong style={{ color: "#f8fafc" }}>{selectedCourse.mentor || "Unknown"}</strong></span>
-      </div>
-      
-      {/* Dynamic Back Button if Student is inside the player */}
-      {viewMode === "player" && (
-        <button 
-          onClick={() => setViewMode("syllabus")}
-          style={{ padding: "10px 18px", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          ← Back to Course Syllabus
-        </button>
-      )}
-    </div>
-
-    {/* ---------------- MODE 1: SYLLABUS & VIDEOS LIST INDEX ---------------- */}
-    {(!viewMode || viewMode === "syllabus") && (
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        
-        {/* Progress Tracker Card */}
-       {/* 📊 PROGRESS TRACKER CARD (Fixed 'videos is not defined') */}
-<div style={{ backgroundColor: "#111827", padding: "20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
-  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#94a3b8", marginBottom: "8px" }}>
-    <span>Your Learning Progress</span>
-    <span style={{ color: "#38bdf8", fontWeight: "bold" }}>
-      {/* ✅ Fixed: 'videos' ki jagah 'selectedCourse.videos' use kiya hai */}
-      {Math.round((((selectedCourse?.videos || []).filter((v: any) => v.completed).length) / (selectedCourse?.videos || []).length) * 100) || 0}% Completed
-    </span>
-  </div>
-  <div style={{ width: "100%", height: "8px", backgroundColor: "#1e293b", borderRadius: "999px", overflow: "hidden" }}>
-    <div style={{ 
-      /* ✅ Fixed: Progress bar width ke liye bhi safe relation check */
-      width: `${(((selectedCourse?.videos || []).filter((v: any) => v.completed).length) / (selectedCourse?.videos || []).length) * 100 || 0}%`, 
-      height: "100%", 
-      backgroundColor: "#38bdf8", 
-      transition: "width 0.4s ease" 
-    }} />
-  </div>
-</div>
-
-        {/* Syllabus Playlist Matrix */}
-        <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
-          <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "800", color: "#f8fafc" }}>Course Content Syllabus</h3>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {Object.keys(modulesGrouped || {}).length > 0 ? (
-              Object.keys(modulesGrouped).map((modName, idx) => (
-                <div key={idx} style={{ border: "1px solid #334155", borderRadius: "12px", overflow: "hidden", backgroundColor: "#0f172a" }}>
-                  {/* Module Group Heading Bar */}
-                  <div style={{ padding: "14px 16px", backgroundColor: "#0d192c", fontSize: "13px", fontWeight: "700", color: "#f8fafc", borderBottom: "1px solid #334155" }}>
-                    📁 {modName}
-                  </div>
-
-                  {/* Videos Under This Module */}
-                  <div style={{ display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
-                    {modulesGrouped[modName].map((video, vIdx) => {
-                      const isFinished = video.completed;
-                      return (
-                        <div
-                          key={video.id}
-                          onClick={() => {
-                            setActiveVideo(video);
-                            setViewMode("player"); // 👈 Classroom player open ho jayega
-                          }}
-                          style={{ 
-                            padding: "14px 16px", 
-                            display: "flex", 
-                            justifyContent: "space-between", 
-                            alignItems: "center", 
-                            cursor: "pointer", 
-                            borderBottom: "1px solid rgba(255,255,255,0.03)",
-                            transition: "background 0.2s",
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.02)"}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, overflow: "hidden" }}>
-                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "bold" }}>{String(vIdx + 1).padStart(2, '0')}</span>
-                            <Play size={14} style={{ color: isFinished ? "#10b981" : "#3b82f6", fill: isFinished ? "#10b981" : "none" }} />
-                            <span style={{ fontSize: "13.5px", color: "#cbd5e1", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{video.name}</span>
-                          </div>
-                          
-                          {/* Progress Tag / Duration */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <span style={{ fontSize: "12px", color: "#64748b" }}>{video.duration || "00:00"}</span>
-                            {isFinished ? (
-                              <span style={{ fontSize: "10px", fontWeight: "bold", backgroundColor: "rgba(16,185,129,0.1)", color: "#10b981", padding: "4px 8px", borderRadius: "6px" }}>Completed</span>
-                            ) : (
-                              <span style={{ fontSize: "10px", fontWeight: "bold", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", padding: "4px 8px", borderRadius: "6px" }}>Start Learning</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div style={{ textAlign: "center", padding: "40px", color: "#64748b", fontSize: "13px" }}>Is course track mein abhi koi lecture publish nahi kiya gaya.</div>
-            )}
-          </div>
-        </div>
-
-      </div>
-    )}
-
-    {/* ---------------- MODE 2: ACTUAL LIVE CLASSROOM CORE PLAYER ---------------- */}
-    {viewMode === "player" && (
-      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: "32px", alignItems: "start" }}>
-
-        {/* LEFT AREA: PLAYER AND SUBMISSIONS */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-
-          {/* Media Player Box */}
-          <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
-            <div style={{ marginBottom: "16px" }}>
-              <span style={{ fontSize: "10px", color: "#38bdf8", fontWeight: "800", textTransform: "uppercase" }}>NOW PLAYING LECTURE</span>
-              <h3 style={{ margin: "4px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#ffffff" }}>
-                {activeVideo ? activeVideo.name : "Loading Video Sequence..."}
-              </h3>
-            </div>
-
-            <div style={{ width: "100%", aspectRatio: "16/9", backgroundColor: "#0f172a", borderRadius: "16px", overflow: "hidden", position: "relative", border: "1px solid #334155" }}>
-              {activeVideo?.video_url ? (
-                <div style={{ width: "100%", height: "100%" }}>
-                  <iframe
-                    src={`${getEmbedUrl(activeVideo.video_url)}?controls=1&modestbranding=1&rel=0`}
-                    title="HRD Studio Player"
-                    style={{ width: "100%", height: "100%", border: "none" }}
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}>
-                  <Video size={40} style={{ marginBottom: "12px" }} />
-                  <span style={{ fontSize: "13px" }}>No video URL linked in database for this specific row.</span>
-                </div>
+        {/* ================= TAB 2: CLASSROOM CORE STUDIO ================= */}
+        {activeTab === "classroom" && selectedCourse && (
+          <div>
+            {/* 📋 UPPER HEADER: COURSE OVERVIEW STATUS BAR */}
+            <div style={{ backgroundColor: "#0a1425", padding: "20px 24px", borderRadius: "16px", border: "1px solid #334155", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+              <div>
+                <span style={{ fontSize: "11px", color: "#a855f7", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>Enrolled Program</span>
+                <h2 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", color: "#ffffff" }}>
+                  {selectedCourse.courses?.title || "SEO + WordPress Premium Masterclass"}
+                </h2>
+                <span style={{ fontSize: "12px", color: "#94a3b8" }}>Lead Mentor: <strong style={{ color: "#f8fafc" }}>{selectedCourse.courses?.mentor || "Sir Zain"}</strong></span>
+              </div>
+              
+              {viewMode === "player" && (
+                <button 
+                  onClick={() => setViewMode("syllabus")}
+                  style={{ padding: "10px 18px", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  ← Back to Course Syllabus
+                </button>
               )}
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "16px" }}>
-              <button onClick={() => handleVideoNavigation("prev")} style={{ padding: "10px 20px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "10px", cursor: "pointer", fontSize: "13px", color: "#94a3b8" }}>
-                ← Previous Lecture
-              </button>
-              <button onClick={() => handleVideoNavigation("next")} style={{ padding: "10px 20px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "10px", cursor: "pointer", fontSize: "13px", color: "#94a3b8" }}>
-                Next Lecture →
-              </button>
-            </div>
-
-            {/* Video Description Section */}
-            {activeVideo?.description && (
-              <div style={{ marginTop: "20px", padding: "16px", backgroundColor: "#0f172a", borderRadius: "14px", borderLeft: "4px solid #38bdf8" }}>
-                <h4 style={{ margin: "0 0 6px 0", fontSize: "12px", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>Lecture Overview & Syllabus Topics</h4>
-                <p style={{ margin: 0, fontSize: "13px", color: "#cbd5e1", lineHeight: "20px", whiteSpace: "pre-wrap" }}>{activeVideo.description}</p>
-              </div>
-            )}
-          </div>
-
-          {/* STUDY RESOURCE NOTES ATTACHMENTS */}
-          <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
-            <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "800", color: "#10b981", display: "flex", alignItems: "center", gap: "8px" }}><FileText size={16} /> LECTURE ATTACHMENTS & STUDY NOTES</h4>
-            <p style={{ margin: "0 0 16px 0", color: "#94a3b8", fontSize: "12.5px" }}>Is video ke regarding links aur resources:</p>
-            {currentVideoNotes.length === 0 ? (
-              <span style={{ fontSize: "13px", color: "#64748b", fontStyle: "italic", display: "block", padding: "12px", backgroundColor: "#0f172a", borderRadius: "12px", textAlign: "center" }}>No resources linked with this video timeline.</span>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px" }}>
-                {currentVideoNotes.map(note => (
-                  <div key={note.id} style={{ backgroundColor: "#0f172a", padding: "12px 16px", borderRadius: "12px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <h5 style={{ margin: 0, fontSize: "13px", color: "#ffffff" }}>{note.asset_title}</h5>
-                      <span style={{ fontSize: "11px", color: "#64748b" }}>{note.asset_type}</span>
-                    </div>
-                    <a href={note.download_url} target="_blank" rel="noreferrer" style={{ padding: "8px", backgroundColor: "#1e293b", borderRadius: "8px", color: "#10b981", border: "1px solid #334155" }}><Download size={14} /></a>
+            {/* ---------------- MODE 1: SYLLABUS & VIDEOS LIST INDEX ---------------- */}
+            {viewMode === "syllabus" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                
+                {/* Progress Tracker Card */}
+                <div style={{ backgroundColor: "#111827", padding: "20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#94a3b8", marginBottom: "8px" }}>
+                    <span>Your Learning Progress</span>
+                    <span style={{ color: "#38bdf8", fontWeight: "bold" }}>
+                      {lectures.length > 0 ? Math.round((lectures.filter(v => v.completed).length / lectures.length) * 100) : 0}% Completed
+                    </span>
                   </div>
-                ))}
+                  <div style={{ width: "100%", height: "8px", backgroundColor: "#1e293b", borderRadius: "999px", overflow: "hidden" }}>
+                    <div style={{ 
+                      width: `${lectures.length > 0 ? (lectures.filter(v => v.completed).length / lectures.length) * 100 : 0}%`, 
+                      height: "100%", 
+                      backgroundColor: "#38bdf8", 
+                      transition: "width 0.4s ease" 
+                    }} />
+                  </div>
+                </div>
+
+                {/* Syllabus Playlist Matrix */}
+                <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "800", color: "#f8fafc" }}>Course Content Syllabus</h3>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {Object.keys(modulesGrouped || {}).length > 0 ? (
+                      Object.keys(modulesGrouped).map((modName, idx) => (
+                        <div key={idx} style={{ border: "1px solid #334155", borderRadius: "12px", overflow: "hidden", backgroundColor: "#0f172a" }}>
+                          <div style={{ padding: "14px 16px", backgroundColor: "#0d192c", fontSize: "13px", fontWeight: "700", color: "#f8fafc", borderBottom: "1px solid #334155" }}>
+                            📁 {modName}
+                          </div>
+
+                          <div style={{ display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
+                            {modulesGrouped[modName].map((video, vIdx) => {
+                              const isFinished = video.completed;
+                              return (
+                                <div
+                                  key={video.id}
+                                  onClick={() => {
+                                    setActiveVideo(video);
+                                    setViewMode("player");
+                                  }}
+                                  style={{ 
+                                    padding: "14px 16px", 
+                                    display: "flex", 
+                                    justifyContent: "space-between", 
+                                    alignItems: "center", 
+                                    cursor: "pointer", 
+                                    borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                    transition: "background 0.2s",
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.02)"}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, overflow: "hidden" }}>
+                                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "bold" }}>{String(vIdx + 1).padStart(2, '0')}</span>
+                                    <Play size={14} style={{ color: isFinished ? "#10b981" : "#3b82f6", fill: isFinished ? "#10b981" : "none" }} />
+                                    <span style={{ fontSize: "13.5px", color: "#cbd5e1", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{video.name}</span>
+                                  </div>
+                                  
+                                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <span style={{ fontSize: "12px", color: "#64748b" }}>{video.duration || "00:00"}</span>
+                                    {isFinished ? (
+                                      <span style={{ fontSize: "10px", fontWeight: "bold", backgroundColor: "rgba(16,185,129,0.1)", color: "#10b981", padding: "4px 8px", borderRadius: "6px" }}>Completed</span>
+                                    ) : (
+                                      <span style={{ fontSize: "10px", fontWeight: "bold", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", padding: "4px 8px", borderRadius: "6px" }}>Start Learning</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ textAlign: "center", padding: "40px", color: "#64748b", fontSize: "13px" }}>Is course track mein abhi koi lecture publish nahi kiya gaya.</div>
+                    )}
+                  </div>
+                </div>
+
               </div>
             )}
-          </div>
 
-          {/* TASK SHEET SUBMISSION MATRIX */}
-          <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
-            <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "800", color: "#f97316", display: "flex", alignItems: "center", gap: "8px" }}><UploadCloud size={16} /> DEPLOY ASSIGNMENT / TASK SOLUTION LINK</h4>
-            <form onSubmit={handleAssignmentSubmit} style={{ display: "flex", gap: "12px" }}>
-              <input type="url" required placeholder="Paste Drive link or GitHub repository tracking link..." value={assignmentUrl} onChange={e => setAssignmentUrl(e.target.value)} style={{ flex: 1, padding: "12px 16px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px", fontSize: "13px", color: "#f8fafc" }} />
-              <button type="submit" disabled={submitting} style={{ padding: "0 24px", backgroundColor: "#f97316", color: "#ffffff", border: "none", borderRadius: "12px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}>Submit Task</button>
-            </form>
-            {currentVideoSubmission && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#0f172a", padding: "16px", borderRadius: "14px", marginTop: "16px", border: "1px solid #334155", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontSize: "10px", color: "#f97316", fontWeight: "800", display: "block" }}>INSTRUCTOR GRADING REMARKS:</span>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#94a3b8" }}>{currentVideoSubmission.remarks}</p>
-                </div>
-                <div style={{ paddingLeft: "20px", borderLeft: "1px solid #334155", textAlign: "center" }}>
-                  <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>GRADE</span>
-                  <span style={{ fontSize: "18px", fontWeight: "800", color: "#4ade80" }}>{currentVideoSubmission.grade}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+            {/* ---------------- MODE 2: ACTUAL LIVE CLASSROOM CORE PLAYER ---------------- */}
+            {viewMode === "player" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: "32px", alignItems: "start" }}>
 
-        {/* RIGHT SIDEBAR: QUICK PLAYER PLAYLIST NAVIGATOR */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)", border: "1px solid #6d28d9", borderRadius: "16px", color: "#ffffff", fontWeight: "800", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
-          >
-            <ClipboardList size={18} /> View All Submitted Assignments
-          </button>
+                {/* LEFT AREA: PLAYER AND SUBMISSIONS */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
-            <h4 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "800", color: "#a855f7" }}>PLAYER SIDEBAR INDEX</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {Object.keys(modulesGrouped).map((modName, idx) => {
-                const isExpanded = expandedModule === modName;
-                return (
-                  <div key={idx} style={{ border: "1px solid #334155", borderRadius: "14px", overflow: "hidden", backgroundColor: "#0f172a" }}>
-                    <div onClick={() => setExpandedModule(isExpanded ? null : modName)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px", backgroundColor: "#1e293b", cursor: "pointer" }}>
-                      <span style={{ fontSize: "12px", fontWeight: "700", color: "#f8fafc" }}>{modName}</span>
-                      <ChevronDown size={14} style={{ color: "#94a3b8", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }} />
+                  {/* Media Player Box */}
+                  <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
+                    <div style={{ marginBottom: "16px" }}>
+                      <span style={{ fontSize: "10px", color: "#38bdf8", fontWeight: "800", textTransform: "uppercase" }}>NOW PLAYING LECTURE</span>
+                      <h3 style={{ margin: "4px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#ffffff" }}>
+                        {activeVideo ? activeVideo.name : "Loading Video Sequence..."}
+                      </h3>
                     </div>
-                    {isExpanded && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", padding: "6px", backgroundColor: "#0f172a" }}>
-                        {modulesGrouped[modName].map(video => {
-                          const isCurrent = String(activeVideo?.id) === String(video.id);
-                          return (
-                            <div
-                              key={video.id}
-                              onClick={() => setActiveVideo(video)}
-                              style={{ padding: "10px 12px", backgroundColor: isCurrent ? "rgba(168,85,247,0.15)" : "transparent", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
-                            >
-                              <span style={{ fontSize: "12px", color: isCurrent ? "#c084fc" : "#cbd5e1" }}>{video.name}</span>
-                              <span style={{ fontSize: "11px", color: "#64748b" }}>{video.duration}</span>
-                            </div>
-                          );
-                        })}
+
+                    <div style={{ width: "100%", aspectRatio: "16/9", backgroundColor: "#0f172a", borderRadius: "16px", overflow: "hidden", position: "relative", border: "1px solid #334155" }}>
+                      {activeVideo?.video_url ? (
+                        <div style={{ width: "100%", height: "100%" }}>
+                          <iframe
+                            src={`${getEmbedUrl(activeVideo.video_url)}?controls=1&modestbranding=1&rel=0`}
+                            title="HRD Studio Player"
+                            style={{ width: "100%", height: "100%", border: "none" }}
+                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#64748b" }}>
+                          <Video size={40} style={{ marginBottom: "12px" }} />
+                          <span style={{ fontSize: "13px" }}>No video URL linked in database for this specific row.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "16px" }}>
+                      <button onClick={() => handleVideoNavigation("prev")} style={{ padding: "10px 20px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "10px", cursor: "pointer", fontSize: "13px", color: "#94a3b8" }}>
+                        ← Previous Lecture
+                      </button>
+                      <button onClick={() => handleVideoNavigation("next")} style={{ padding: "10px 20px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "10px", cursor: "pointer", fontSize: "13px", color: "#94a3b8" }}>
+                        Next Lecture →
+                      </button>
+                    </div>
+
+                    {/* Video Description Section */}
+                    {activeVideo?.description && (
+                      <div style={{ marginTop: "20px", padding: "16px", backgroundColor: "#0f172a", borderRadius: "14px", borderLeft: "4px solid #38bdf8" }}>
+                        <h4 style={{ margin: "0 0 6px 0", fontSize: "12px", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>Lecture Overview & Syllabus Topics</h4>
+                        <p style={{ margin: 0, fontSize: "13px", color: "#cbd5e1", lineHeight: "20px", whiteSpace: "pre-wrap" }}>{activeVideo.description}</p>
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
 
-      </div>
-    )}
-  </div>
-)}
+                  {/* STUDY RESOURCE NOTES ATTACHMENTS */}
+                  <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
+                    <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "800", color: "#10b981", display: "flex", alignItems: "center", gap: "8px" }}><FileText size={16} /> LECTURE ATTACHMENTS & STUDY NOTES</h4>
+                    <p style={{ margin: "0 0 16px 0", color: "#94a3b8", fontSize: "12.5px" }}>Is video ke regarding links aur resources:</p>
+                    {currentVideoNotes.length === 0 ? (
+                      <span style={{ fontSize: "13px", color: "#64748b", fontStyle: "italic", display: "block", padding: "12px", backgroundColor: "#0f172a", borderRadius: "12px", textAlign: "center" }}>No resources linked with this video timeline.</span>
+                    ) : (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px" }}>
+                        {currentVideoNotes.map(note => (
+                          <div key={note.id} style={{ backgroundColor: "#0f172a", padding: "12px 16px", borderRadius: "12px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <h5 style={{ margin: 0, fontSize: "13px", color: "#ffffff" }}>{note.asset_title}</h5>
+                              <span style={{ fontSize: "11px", color: "#64748b" }}>{note.asset_type}</span>
+                            </div>
+                            <a href={note.download_url} target="_blank" rel="noreferrer" style={{ padding: "8px", backgroundColor: "#1e293b", borderRadius: "8px", color: "#10b981", border: "1px solid #334155" }}><Download size={14} /></a>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TASK SHEET SUBMISSION MATRIX */}
+                  <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
+                    <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "800", color: "#f97316", display: "flex", alignItems: "center", gap: "8px" }}><UploadCloud size={16} /> DEPLOY ASSIGNMENT / TASK SOLUTION LINK</h4>
+                    <form onSubmit={handleAssignmentSubmit} style={{ display: "flex", gap: "12px" }}>
+                      <input type="url" required placeholder="Paste Drive link or GitHub repository tracking link..." value={assignmentUrl} onChange={e => setAssignmentUrl(e.target.value)} style={{ flex: 1, padding: "12px 16px", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "12px", fontSize: "13px", color: "#f8fafc" }} />
+                      <button type="submit" disabled={submitting} style={{ padding: "0 24px", backgroundColor: "#f97316", color: "#ffffff", border: "none", borderRadius: "12px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}>Submit Task</button>
+                    </form>
+                    {currentVideoSubmission && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#0f172a", padding: "16px", borderRadius: "14px", marginTop: "16px", border: "1px solid #334155", alignItems: "center" }}>
+                        <div>
+                          <span style={{ fontSize: "10px", color: "#f97316", fontWeight: "800", display: "block" }}>INSTRUCTOR GRADING REMARKS:</span>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#94a3b8" }}>{currentVideoSubmission.remarks}</p>
+                        </div>
+                        <div style={{ paddingLeft: "20px", borderLeft: "1px solid #334155", textAlign: "center" }}>
+                          <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>GRADE</span>
+                          <span style={{ fontSize: "18px", fontWeight: "800", color: "#4ade80" }}>{currentVideoSubmission.grade}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* RIGHT SIDEBAR: QUICK PLAYER PLAYLIST NAVIGATOR */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <button
+                    onClick={() => setShowHistoryModal(true)}
+                    style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)", border: "1px solid #6d28d9", borderRadius: "16px", color: "#ffffff", fontWeight: "800", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
+                  >
+                    <ClipboardList size={18} /> View All Submitted Assignments
+                  </button>
+
+                  <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "24px", border: "1px solid #334155" }}>
+                    <h4 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "800", color: "#a855f7" }}>PLAYER SIDEBAR INDEX</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {Object.keys(modulesGrouped).map((modName, idx) => {
+                        const isExpanded = expandedModule === modName;
+                        return (
+                          <div key={idx} style={{ border: "1px solid #334155", borderRadius: "14px", overflow: "hidden", backgroundColor: "#0f172a" }}>
+                            <div onClick={() => setExpandedModule(isExpanded ? null : modName)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px", backgroundColor: "#1e293b", cursor: "pointer" }}>
+                              <span style={{ fontSize: "12px", fontWeight: "700", color: "#f8fafc" }}>{modName}</span>
+                              <ChevronDown size={14} style={{ color: "#94a3b8", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }} />
+                            </div>
+                            {isExpanded && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "4px", padding: "6px", backgroundColor: "#0f172a" }}>
+                                {modulesGrouped[modName].map(video => {
+                                  const isCurrent = String(activeVideo?.id) === String(video.id);
+                                  return (
+                                    <div
+                                      key={video.id}
+                                      onClick={() => setActiveVideo(video)}
+                                      style={{ padding: "10px 12px", backgroundColor: isCurrent ? "rgba(168,85,247,0.15)" : "transparent", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                                    >
+                                      <span style={{ fontSize: "12px", color: isCurrent ? "#c084fc" : "#cbd5e1" }}>{video.name}</span>
+                                      <span style={{ fontSize: "11px", color: "#64748b" }}>{video.duration}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ================= TAB 3: TOOLS CENTRAL VAULT ================= */}
         {activeTab === "tools" && (
@@ -801,7 +859,7 @@ export default function StudentDashboard() {
         {/* ================= TAB 4: COMPLAIN SYSTEM ================= */}
         {activeTab === "complain" && (
           <div style={{ backgroundColor: "#111827", padding: "32px", borderRadius: "24px", border: "1px solid #334155", maxWidth: "600px", margin: "0 auto" }}>
-            <h3 style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#f04a4a", fontWeight: "800" }}>Support Ticket Complain Pipeline</h3>
+            <h3 style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#ef4444", fontWeight: "800" }}>Support Ticket Complain Pipeline</h3>
             <p style={{ margin: "0 0 24px 0", color: "#f8f8f8", fontSize: "13.5px" }}>Register backend discrepancies or account login/fee related issues directly to admin panel track.</p>
 
             <form onSubmit={handleComplainSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

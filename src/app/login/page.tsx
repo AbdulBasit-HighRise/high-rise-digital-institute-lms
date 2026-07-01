@@ -139,10 +139,49 @@ export default function LoginPage() {
           </div>
 
           {/* Core Submit Auth Action */}
-          <button type="submit" disabled={loading} style={{ marginTop: "6px", backgroundColor: "#2563eb", color: "white", padding: "14px", border: "none", borderRadius: "14px", fontWeight: "bold", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.2s ease", boxShadow: "0 4px 12px rgba(37,99,235,0.2)" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1d4ed8"} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}>
-            {loading ? <Loader2 className="animate-spin" size={18} /> : "Sign In to Portal"}
-          </button>
-        </form>
+      <button 
+  type="submit" 
+  disabled={loading} 
+  style={{ 
+    marginTop: "6px", 
+    backgroundColor: "#2563eb", 
+    color: "white", 
+    padding: "14px", 
+    border: "none", 
+    borderRadius: "14px", 
+    fontWeight: "bold", 
+    fontSize: "14px", 
+    cursor: loading ? "not-allowed" : "pointer", 
+    display: "flex", 
+    alignItems: "center", 
+    justifyContent: "center", 
+    gap: "8px", 
+    transition: "all 0.2s ease", 
+    boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
+    height: "50px" // Ensures button height stays fixed when loading flips
+  }} 
+  onMouseEnter={(e) => { if(!loading) e.currentTarget.style.backgroundColor = "#1d4ed8"; }} 
+  onMouseLeave={(e) => { if(!loading) e.currentTarget.style.backgroundColor = "#2563eb"; }}
+>
+  {loading ? (
+    /* Mini Embedded Custom Loader inside Button */
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <img 
+        src="/HR.png" 
+        alt="HRD Logo"
+        style={{ 
+          height: "20px",     
+          width: "auto",      
+          objectFit: "contain"
+        }} 
+      />
+      <Loader2 className="animate-spin text-white" size={16} />
+    </div>
+  ) : (
+    "Sign In to Portal"
+  )}
+</button>
+</form>
 
         {/* --- PREMIUM COMPACT ADMIN ASSISTANCE NOTIFICATION --- */}
         <div style={{ marginTop: "28px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: "10px", backgroundColor: "rgba(255,255,255,0.01)", padding: "12px", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.03)" }}>
